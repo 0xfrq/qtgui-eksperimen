@@ -5,7 +5,7 @@
 #include <QLabel>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), currentButton(0)
+    : QMainWindow(parent), currentButton(0), isContinuousRunning(false)
 {
     setWindowTitle("Linux Command Runner");
     resize(600, 400);
@@ -19,10 +19,12 @@ MainWindow::MainWindow(QWidget *parent)
     button1 = new QPushButton("List Files (ls -la)", this);
     button2 = new QPushButton("Show Date/Time (date)", this);
     button3 = new QPushButton("Disk Usage (df -h)", this);
+    button4 = new QPushButton("Monitor System (top)", this);
     
     buttonLayout->addWidget(button1);
     buttonLayout->addWidget(button2);
     buttonLayout->addWidget(button3);
+    buttonLayout->addWidget(button4);
     
     QLabel *outputLabel = new QLabel("Command Output:", this);
     
@@ -35,13 +37,17 @@ MainWindow::MainWindow(QWidget *parent)
     mainLayout->addWidget(outputDisplay);
     
     process = new QProcess(this);
+    continuousProcess = new QProcess(this);
     
     connect(button1, SIGNAL(clicked()), this, SLOT(onButton1Clicked()));
     connect(button2, SIGNAL(clicked()), this, SLOT(onButton2Clicked()));
     connect(button3, SIGNAL(clicked()), this, SLOT(onButton3Clicked()));
+    connect(button4, SIGNAL(clicked()), this, SLOT(onButton4Clicked()));
     
     connect(process, SIGNAL(finished(int)), this, SLOT(onProcessFinished(int)));
     connect(process, SIGNAL(error(QProcess::ProcessError)), this, SLOT(onProcessError(QProcess::ProcessError)));
+    
+    connect(continuousProcess, SIGNAL(readyReadStandardOutput()), this, SLOT(onContinuousProcessOutput()));
 }
 
 MainWindow::~MainWindow()
@@ -49,6 +55,10 @@ MainWindow::~MainWindow()
     if (process) {
         process->kill();
         process->waitForFinished();
+    }
+    if (continuousProcess) {
+        continuousProcess->kill();
+        continuousProcess->waitForFinished();
     }
 }
 
@@ -65,6 +75,15 @@ void MainWindow::onButton2Clicked()
 void MainWindow::onButton3Clicked()
 {
     executeCommand("df -h", button3);
+}
+
+void MainWindow::onButton4Clicked()
+{
+    if (isContinuousRunning) {
+        stopContinuousCommand();
+    } else {
+        startContinuousCommand();
+    }
 }
 
 void MainWindow::executeCommand(const QString &command, QPushButton *button)
@@ -153,3 +172,45 @@ void MainWindow::setButtonState(QPushButton *button, const QString &state)
         button->setStyleSheet("");
     }
 }
+
+void MainWindow::startContinuousCommand()
+{
+    outputDisplay->clear();
+    outputDisplay->append("Starting continuous monitoring: top -b -d 1\n");
+    outputDisplay->append("----------------------------------------\n");
+    
+    QStringList args;
+    args << "-b" << "-d" << "1";
+    
+    continuousProcess->start("top", args);
+    isContinuousRunning = true;
+    button4->setStyleSheet("color: green;");
+    button4->setText("Stop Monitor (top)");
+}
+
+void MainWindow::stopContinuousCommand()
+{
+    if (continuousProcess->state() == QProcess::Running) {
+        continuousProcess->kill();
+        continuousProcess->waitForFinished();
+    }
+    
+    outputDisplay->append("\n----------------------------------------\n");
+    outputDisplay->append("Continuous monitoring stopped.\n");
+    
+    isContinuousRunning = false;
+    button4->setStyleSheet("");
+    button4->setText("Monitor System (top)");
+}
+
+void MainWindow::onContinuousProcessOutput()
+{
+    QString output = continuousProcess->readAllStandardOutput();
+    if (!output.isEmpty()) {
+        outputDisplay->append(output);
+        QTextCursor cursor = outputDisplay->textCursor();
+        cursor.movePosition(QTextCursor::End);
+        outputDisplay->setTextCursor(cursor);
+    }
+}
+
