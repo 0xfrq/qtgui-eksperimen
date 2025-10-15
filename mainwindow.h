@@ -26,6 +26,20 @@ private:
     QPushButton *button3;
     QTextEdit *outputDisplay;
     QProcess *process;
+    QPushButton *currentButton;
+    
+    void executeCommand(const QString &command, QPushButton *button);
+    void setButtonState(QPushButton *button, const QString &state);
+};
+
+#endif
+
+private:
+    QPushButton *button1;
+    QPushButton *button2;
+    QPushButton *button3;
+    QTextEdit *outputDisplay;
+    QProcess *process;
     
     void executeCommand(const QString &command);
 };

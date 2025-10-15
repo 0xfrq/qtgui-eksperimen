@@ -5,21 +5,17 @@
 #include <QLabel>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent), currentButton(0)
 {
-    // Set window properties
     setWindowTitle("Linux Command Runner");
     resize(600, 400);
     
-    // Create central widget and main layout
     QWidget *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
     
-    // Create horizontal layout for buttons
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     
-    // Create three buttons with descriptive labels
     button1 = new QPushButton("List Files (ls -la)", this);
     button2 = new QPushButton("Show Date/Time (date)", this);
     button3 = new QPushButton("Disk Usage (df -h)", this);
@@ -28,28 +24,22 @@ MainWindow::MainWindow(QWidget *parent)
     buttonLayout->addWidget(button2);
     buttonLayout->addWidget(button3);
     
-    // Create label for output section
     QLabel *outputLabel = new QLabel("Command Output:", this);
     
-    // Create text display for command output
     outputDisplay = new QTextEdit(this);
     outputDisplay->setReadOnly(true);
     outputDisplay->setPlaceholderText("Click a button to execute a command...");
     
-    // Add widgets to main layout
     mainLayout->addLayout(buttonLayout);
     mainLayout->addWidget(outputLabel);
     mainLayout->addWidget(outputDisplay);
     
-    // Initialize process
     process = new QProcess(this);
     
-    // Connect button signals
     connect(button1, SIGNAL(clicked()), this, SLOT(onButton1Clicked()));
     connect(button2, SIGNAL(clicked()), this, SLOT(onButton2Clicked()));
     connect(button3, SIGNAL(clicked()), this, SLOT(onButton3Clicked()));
     
-    // Connect process signals
     connect(process, SIGNAL(finished(int)), this, SLOT(onProcessFinished(int)));
     connect(process, SIGNAL(error(QProcess::ProcessError)), this, SLOT(onProcessError(QProcess::ProcessError)));
 }
@@ -64,31 +54,33 @@ MainWindow::~MainWindow()
 
 void MainWindow::onButton1Clicked()
 {
-    executeCommand("ls -la");
+    executeCommand("ls -la", button1);
 }
 
 void MainWindow::onButton2Clicked()
 {
-    executeCommand("date");
+    executeCommand("date", button2);
 }
 
 void MainWindow::onButton3Clicked()
 {
-    executeCommand("df -h");
+    executeCommand("df -h", button3);
 }
 
-void MainWindow::executeCommand(const QString &command)
+void MainWindow::executeCommand(const QString &command, QPushButton *button)
 {
     if (process->state() == QProcess::Running) {
         outputDisplay->append("\n[ERROR] A command is already running. Please wait...\n");
         return;
     }
     
+    currentButton = button;
+    setButtonState(button, "running");
+    
     outputDisplay->clear();
     outputDisplay->append(QString("Executing: %1\n").arg(command));
     outputDisplay->append("----------------------------------------\n");
     
-    // Split command into program and arguments
     QStringList parts = command.split(" ");
     QString program = parts.takeFirst();
     
@@ -110,6 +102,14 @@ void MainWindow::onProcessFinished(int exitCode)
     
     outputDisplay->append("\n----------------------------------------");
     outputDisplay->append(QString("\nProcess finished with exit code: %1").arg(exitCode));
+    
+    if (currentButton) {
+        if (exitCode == 0) {
+            setButtonState(currentButton, "idle");
+        } else {
+            setButtonState(currentButton, "error");
+        }
+    }
 }
 
 void MainWindow::onProcessError(QProcess::ProcessError error)
@@ -137,4 +137,19 @@ void MainWindow::onProcessError(QProcess::ProcessError error)
     }
     
     outputDisplay->append(QString("\n[ERROR] %1\n").arg(errorString));
+    
+    if (currentButton) {
+        setButtonState(currentButton, "error");
+    }
+}
+
+void MainWindow::setButtonState(QPushButton *button, const QString &state)
+{
+    if (state == "running") {
+        button->setStyleSheet("color: green;");
+    } else if (state == "error") {
+        button->setStyleSheet("color: red;");
+    } else {
+        button->setStyleSheet("");
+    }
 }
