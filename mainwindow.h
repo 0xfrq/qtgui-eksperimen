@@ -10,14 +10,14 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
 private slots:
     void onButton1Clicked();
     void onButton2Clicked();
     void onButton3Clicked();
-    void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    void onProcessFinished(int exitCode);
     void onProcessError(QProcess::ProcessError error);
 
 private:

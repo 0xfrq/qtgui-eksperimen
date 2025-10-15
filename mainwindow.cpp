@@ -45,14 +45,13 @@ MainWindow::MainWindow(QWidget *parent)
     process = new QProcess(this);
     
     // Connect button signals
-    connect(button1, &QPushButton::clicked, this, &MainWindow::onButton1Clicked);
-    connect(button2, &QPushButton::clicked, this, &MainWindow::onButton2Clicked);
-    connect(button3, &QPushButton::clicked, this, &MainWindow::onButton3Clicked);
+    connect(button1, SIGNAL(clicked()), this, SLOT(onButton1Clicked()));
+    connect(button2, SIGNAL(clicked()), this, SLOT(onButton2Clicked()));
+    connect(button3, SIGNAL(clicked()), this, SLOT(onButton3Clicked()));
     
     // Connect process signals
-    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, &MainWindow::onProcessFinished);
-    connect(process, &QProcess::errorOccurred, this, &MainWindow::onProcessError);
+    connect(process, SIGNAL(finished(int)), this, SLOT(onProcessFinished(int)));
+    connect(process, SIGNAL(error(QProcess::ProcessError)), this, SLOT(onProcessError(QProcess::ProcessError)));
 }
 
 MainWindow::~MainWindow()
@@ -96,7 +95,7 @@ void MainWindow::executeCommand(const QString &command)
     process->start(program, parts);
 }
 
-void MainWindow::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
+void MainWindow::onProcessFinished(int exitCode)
 {
     QString output = process->readAllStandardOutput();
     QString error = process->readAllStandardError();
