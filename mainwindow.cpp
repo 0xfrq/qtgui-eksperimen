@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     button1 = new QPushButton("List Files (ls -la)", this);
     button2 = new QPushButton("Show Date/Time (date)", this);
     button3 = new QPushButton("Disk Usage (df -h)", this);
-    button4 = new QPushButton("Monitor System (top)", this);
+    button4 = new QPushButton("Launch OP3 Manager", this);
     
     buttonLayout->addWidget(button1);
     buttonLayout->addWidget(button2);
@@ -176,16 +176,16 @@ void MainWindow::setButtonState(QPushButton *button, const QString &state)
 void MainWindow::startContinuousCommand()
 {
     outputDisplay->clear();
-    outputDisplay->append("Starting continuous monitoring: top -b -d 1\n");
+    outputDisplay->append("Starting ROS launch: roslaunch op3_manager op3_manager.launch\n");
     outputDisplay->append("----------------------------------------\n");
     
     QStringList args;
-    args << "-b" << "-d" << "1";
+    args << "op3_manager" << "op3_manager.launch";
     
-    continuousProcess->start("top", args);
+    continuousProcess->start("roslaunch", args);
     isContinuousRunning = true;
     button4->setStyleSheet("color: green;");
-    button4->setText("Stop Monitor (top)");
+    button4->setText("Stop OP3 Manager");
 }
 
 void MainWindow::stopContinuousCommand()
@@ -196,11 +196,11 @@ void MainWindow::stopContinuousCommand()
     }
     
     outputDisplay->append("\n----------------------------------------\n");
-    outputDisplay->append("Continuous monitoring stopped.\n");
+    outputDisplay->append("ROS launch stopped.\n");
     
     isContinuousRunning = false;
     button4->setStyleSheet("");
-    button4->setText("Monitor System (top)");
+    button4->setText("Launch OP3 Manager");
 }
 
 void MainWindow::onContinuousProcessOutput()
