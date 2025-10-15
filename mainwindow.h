@@ -33,15 +33,3 @@ private:
 };
 
 #endif
-
-private:
-    QPushButton *button1;
-    QPushButton *button2;
-    QPushButton *button3;
-    QTextEdit *outputDisplay;
-    QProcess *process;
-    
-    void executeCommand(const QString &command);
-};
-
-#endif
