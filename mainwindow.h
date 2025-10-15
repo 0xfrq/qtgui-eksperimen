@@ -3,22 +3,31 @@
 
 #include <QMainWindow>
 #include <QPushButton>
-#include <QLabel>
+#include <QTextEdit>
+#include <QProcess>
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
-
 public:
     MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
 
 private slots:
-    void onButtonClicked();
+    void onButton1Clicked();
+    void onButton2Clicked();
+    void onButton3Clicked();
+    void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    void onProcessError(QProcess::ProcessError error);
 
 private:
-    QLabel *label;
-QPushButton *button;
-
+    QPushButton *button1;
+    QPushButton *button2;
+    QPushButton *button3;
+    QTextEdit *outputDisplay;
+    QProcess *process;
+    
+    void executeCommand(const QString &command);
 };
 
 #endif
